@@ -1,5 +1,35 @@
+# EmotiLearn AI — Python Requirements
+# Install: pip install -r requirements.txt
+
+# Web Framework
 fastapi==0.110.0
-uvicorn==0.27.1
+uvicorn[standard]==0.27.1
+
+# Database
+motor==3.4.0                # async MongoDB driver
+pymongo==4.6.2
+
+# Auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+PyJWT==2.8.0
+bcrypt==4.1.2
+
+# Computer Vision
+opencv-python==4.9.0.80
+Pillow==10.2.0
+numpy==1.26.4
+
+# Machine Learning (choose one)
+tensorflow==2.16.1          # for CNN emotion model (GPU recommended)
+# torch==2.2.1              # OR use PyTorch
+# torchvision==0.17.1
+
+# Data
+pandas==2.2.1
+scikit-learn==1.4.1
+
+# Utilities
 python-multipart==0.0.9
 python-dotenv==1.0.1
 pydantic==2.6.3
