@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmotiLearn AI – Emotion-Adaptive Learning Platform</title>
+<style>
+/* ===== GLOBAL RESET & VARIABLES ===== */
+:root {
+  --primary:#6C63FF; --primary-dark:#4B44CC; --primary-light:#EEF0FF;
+  --accent:#FF6B6B; --accent2:#FFD166; --accent3:#06D6A0; --accent4:#118AB2;
+  --bg:#F7F8FC; --card:#FFFFFF; --text:#1A1A2E; --text-muted:#6B7280;
+  --border:#E5E7EB; --sidebar:240px;
+  --math:#6C63FF; --sci:#10B981; --eng:#F59E0B;
+  --focused:#10B981; --confused:#F59E0B; --bored:#6B7280;
+  --happy:#EC4899; --frustrated:#EF4444;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+button{cursor:pointer;font-family:inherit}
+input,select,textarea{font-family:inherit}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.9)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideIn{from{transform:translateX(-20px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes emotionPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.fade-up{animation:fadeUp .35s ease both}
+
+/* ===== AUTH ===== */
+#authScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 50%,#f093fb 100%);padding:20px;position:relative;overflow:hidden}
+#authScreen::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.auth-wrap{position:relative;z-index:1;width:100%;max-width:420px}
+.auth-card{background:#fff;border-radius:28px;padding:40px;box-shadow:0 30px 80px rgba(0,0,0,0.2)}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo .brain{width:72px;height:72px;background:linear-gradient(135deg,#6C63FF,#EC4899);border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:36px;box-shadow:0 8px 24px rgba(108,99,255,.4)}
+.auth-logo h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,#6C63FF,#EC4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.auth-logo p{color:var(--text-muted);font-size:13px;margin-top:5px}
+.role-pills{display:flex;gap:8px;background:#F3F4F6;border-radius:14px;padding:5px;margin-bottom:24px}
+.role-pill{flex:1;padding:9px 6px;text-align:center;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text-muted);transition:all .2s;border:none;background:transparent}
+.role-pill.active{background:#fff;color:var(--primary);box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.form-field{margin-bottom:16px}
+.form-field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px;color:var(--text)}
+.form-field input,.form-field select{width:100%;padding:13px 15px;border:2px solid var(--border);border-radius:12px;font-size:14px;outline:none;transition:border-color .2s}
+.form-field input:focus,.form-field select:focus{border-color:var(--primary)}
+.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,#6C63FF,#EC4899);border:none;border-radius:13px;color:#fff;font-size:15px;font-weight:800;transition:transform .2s,box-shadow .2s;margin-top:4px}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,99,255,.4)}
+.demo-links{text-align:center;margin-top:18px;font-size:12px;color:var(--text-muted)}
+.demo-links span{color:var(--primary);cursor:pointer;font-weight:700;margin:0 4px}
+.demo-links span:hover{text-decoration:underline}
+.auth-error{background:#FFF5F5;border:1px solid #FED7D7;color:#C53030;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+
+/* ===== APP LAYOUT ===== */
+#app{display:none;min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar);height:100vh;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;overflow-y:auto}
+.sb-logo{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo .logo-txt{font-size:17px;font-weight:800;background:linear-gradient(135deg,#6C63FF,#EC4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sb-logo .logo-sub{font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:.3px;margin-top:2px}
+.sb-user{padding:15px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sb-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;flex-shrink:0}
+.sb-uname{font-size:13px;font-weight:700}
+.sb-urole{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;display:inline-block;margin-top:3px}
+.role-s{background:#EEF0FF;color:#6C63FF}
+.role-t{background:#D1FAE5;color:#059669}
+.role-p{background:#FEF3C7;color:#D97706}
+.sb-nav{flex:1;padding:10px}
+.nav-sec{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding:0 10px;margin:14px 0 5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-muted);transition:all .2s;margin-bottom:2px;border:none;background:transparent;width:100%;text-align:left}
+.nav-item:hover{background:var(--primary-light);color:var(--primary)}
+.nav-item.active{background:var(--primary-light);color:var(--primary);font-weight:700}
+.nav-icon{font-size:16px;width:22px;text-align:center}
+.sb-bottom{padding:14px;border-top:1px solid var(--border)}
+.btn-logout{width:100%;padding:10px;background:#FFF5F5;border:1px solid #FED7D7;border-radius:10px;color:#E53E3E;font-size:12px;font-weight:700}
+.main{margin-left:var(--sidebar);min-height:100vh;flex:1}
+.pg-header{padding:26px 28px 0}
+.pg-header h1{font-size:26px;font-weight:800;color:var(--text)}
+.pg-header p{color:var(--text-muted);font-size:14px;margin-top:5px}
+.pg-body{padding:20px 28px 32px}
+
+/* ===== STATS GRID ===== */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:26px}
+.stat-card{background:#fff;border-radius:18px;padding:20px;border:1px solid var(--border);position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:18px 18px 0 0}
+.sc-purple::after{background:linear-gradient(90deg,#6C63FF,#A78BFA)}
+.sc-pink::after{background:linear-gradient(90deg,#EC4899,#F472B6)}
+.sc-green::after{background:linear-gradient(90deg,#10B981,#34D399)}
+.sc-amber::after{background:linear-gradient(90deg,#F59E0B,#FCD34D)}
+.sc-red::after{background:linear-gradient(90deg,#EF4444,#FC8181)}
+.stat-val{font-size:34px;font-weight:800;color:var(--text);line-height:1}
+.stat-lbl{font-size:12px;color:var(--text-muted);font-weight:600;margin-top:7px}
+.stat-trend{font-size:11px;font-weight:700;margin-top:8px}
+.trend-up{color:#10B981} .trend-dn{color:#EF4444}
+
+/* ===== CARDS ===== */
+.card{background:#fff;border-radius:18px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.card-hd{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-hd h3{font-size:15px;font-weight:800}
+.card-bd{padding:22px}
+.section-ttl{font-size:16px;font-weight:800;margin-bottom:16px;color:var(--text)}
+
+/* ===== SUBJECT CARDS ===== */
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+.subj-card{background:#fff;border-radius:22px;padding:26px;border:1px solid var(--border);cursor:pointer;transition:all .25s;box-shadow:var(--shadow)}
+.subj-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.1)}
+.subj-icon{font-size:40px;margin-bottom:14px}
+.subj-name{font-size:17px;font-weight:800;color:var(--text)}
+.subj-desc{font-size:12px;color:var(--text-muted);margin-top:4px;line-height:1.4}
+.prog-track{height:6px;background:#F3F4F6;border-radius:10px;overflow:hidden;margin-top:16px}
+.prog-fill{height:100%;border-radius:10px;transition:width 1s ease}
+.subj-meta{font-size:11px;color:var(--text-muted);margin-top:7px;display:flex;justify-content:space-between}
+
+/* ===== TOPIC LIST ===== */
+.topic-list{display:flex;flex-direction:column;gap:10px}
+.topic-row{background:#fff;border-radius:14px;border:2px solid var(--border);padding:15px 20px;display:flex;align-items:center;gap:13px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow)}
+.topic-row:hover,.topic-row.active{border-color:var(--primary);background:var(--primary-light)}
+.topic-row .t-icon{font-size:22px}
+.topic-row .t-name{font-size:14px;font-weight:700;flex:1}
+.topic-row .t-badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:700}
+.b-done{background:#D1FAE5;color:#065F46}
+.b-inprog{background:#FEF3C7;color:#92400E}
+.b-new{background:#EEF0FF;color:#6C63FF}
+.b-locked{background:#F3F4F6;color:#6B7280}
+
+/* ===== SESSION LAYOUT ===== */
+.session-grid{display:grid;grid-template-columns:1fr 330px;gap:20px;align-items:start}
+.lesson-wrap{background:#fff;border-radius:22px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
+.lesson-hd{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#F8F7FF,#FDF0FF)}
+.lesson-title{font-size:17px;font-weight:800}
+.lesson-body{padding:26px}
+.lesson-body h2{font-size:20px;font-weight:800;margin-bottom:14px}
+.lesson-body p{font-size:14px;line-height:1.85;color:#374151;margin-bottom:14px}
+.formula-box{background:linear-gradient(135deg,#EEF0FF,#F5F0FF);border-radius:16px;padding:22px;margin:18px 0;border:1px solid #D4C5FF;text-align:center}
+.formula{font-size:28px;font-weight:800;color:var(--primary);letter-spacing:3px;font-family:'Courier New',monospace}
+.formula-note{font-size:12px;color:var(--text-muted);margin-top:7px}
+.examples-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:18px 0}
+.ex-card{background:#F9FAFB;border-radius:13px;padding:16px;border:1px solid var(--border)}
+.ex-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:7px}
+.ex-q{font-size:14px;font-weight:700;color:var(--text)}
+.ex-a{font-size:13px;color:#10B981;margin-top:5px;font-weight:700}
+.ex-detail{font-size:11px;color:var(--text-muted);margin-top:3px}
+
+/* ===== ADAPTIVE BOXES ===== */
+.adapt-simple{background:#F0FDF4;border-radius:14px;padding:16px;border:1px solid #BBF7D0;margin:14px 0;display:flex;gap:12px;align-items:flex-start;animation:fadeUp .4s ease}
+.adapt-hint{background:#FFFBEB;border-radius:14px;padding:16px;border:1px dashed #FCD34D;margin:14px 0;display:flex;gap:12px;align-items:flex-start;animation:fadeUp .4s ease}
+.adapt-quiz{background:#EEF0FF;border-radius:14px;padding:16px;border:1px solid #C4B5FD;margin:14px 0;animation:fadeUp .4s ease}
+.adapt-icon{font-size:22px;flex-shrink:0}
+.adapt-txt{font-size:13px;line-height:1.7;color:var(--text)}
+.adapt-txt strong{font-weight:800}
+
+/* ===== LESSON NAV ===== */
+.lesson-nav{display:flex;gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
+.btn-ln{flex:1;padding:13px;border-radius:13px;font-size:14px;font-weight:700;transition:all .2s;border:2px solid var(--primary)}
+.btn-ln.solid{background:var(--primary);color:#fff}
+.btn-ln.outline{background:#fff;color:var(--primary)}
+.btn-ln:hover{transform:translateY(-1px)}
+.btn-ln.solid:hover{box-shadow:0 6px 20px rgba(108,99,255,.35)}
+
+/* ===== WEBCAM / EMOTION PANEL ===== */
+.emo-panel{display:flex;flex-direction:column;gap:16px;position:sticky;top:20px}
+.webcam-card{background:#fff;border-radius:22px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
+.wc-hd{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.wc-hd h4{font-size:14px;font-weight:800;flex:1}
+.live-dot{width:7px;height:7px;background:#EF4444;border-radius:50%;animation:pulse 1s infinite}
+.live-txt{font-size:10px;font-weight:800;color:#EF4444;background:#FEF2F2;padding:3px 8px;border-radius:20px;display:flex;align-items:center;gap:4px}
+.wc-body{padding:16px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.face-view{width:240px;height:180px;background:#0F172A;border-radius:16px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#videoEl{width:240px;height:180px;object-fit:cover;border-radius:16px;display:none}
+.face-placeholder{text-align:center}
+.face-emoji-big{font-size:56px;animation:emotionPop .6s ease}
+.face-status{color:#64748B;font-size:10px;font-weight:700;margin-top:6px;letter-spacing:.5px}
+.face-overlay{position:absolute;inset:0;border-radius:16px;pointer-events:none}
+.face-box-detect{position:absolute;border:2px solid #06D6A0;border-radius:4px;top:50%;left:50%;transform:translate(-50%,-50%);width:96px;height:108px}
+.face-box-detect::before,.face-box-detect::after{content:'';position:absolute;width:14px;height:14px;border-color:var(--primary);border-style:solid}
+.face-box-detect::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.face-box-detect::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.cam-toggle{padding:8px 16px;background:var(--primary-light);border:1px solid var(--primary);border-radius:10px;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer}
+
+.emo-current{width:100%}
+.emo-current-lbl{font-size:11px;color:var(--text-muted);font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.emo-badge{display:flex;align-items:center;justify-content:center;gap:8px}
+.emo-dot{width:11px;height:11px;border-radius:50%;transition:background .5s}
+.emo-name{font-size:20px;font-weight:800;transition:color .5s}
+.emo-bars{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+.ebar{display:flex;align-items:center;gap:8px}
+.ebar-nm{font-size:11px;font-weight:700;width:76px;color:var(--text-muted)}
+.ebar-track{flex:1;height:7px;background:#F3F4F6;border-radius:10px;overflow:hidden}
+.ebar-fill{height:100%;border-radius:10px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.ebar-pct{font-size:10px;font-weight:700;color:var(--text-muted);width:28px;text-align:right}
+
+.adapt-engine{background:#fff;border-radius:16px;border:1px solid var(--border);padding:16px;box-shadow:var(--shadow)}
+.adapt-hd{font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.adapt-item{display:flex;gap:10px;padding:10px;background:#F9FAFB;border-radius:11px;margin-bottom:8px;animation:slideIn .3s ease}
+.adapt-item-icon{font-size:18px;flex-shrink:0}
+.adapt-item-txt{font-size:12px;font-weight:600;color:var(--text);line-height:1.5}
+.adapt-item-sub{font-size:11px;font-weight:400;color:var(--text-muted);margin-top:2px}
+
+/* ===== QUIZ ===== */
+.quiz-wrap{background:#fff;border-radius:22px;border:1px solid var(--border);overflow:hidden;margin-top:20px;box-shadow:var(--shadow)}
+.quiz-hd{padding:16px 22px;background:linear-gradient(135deg,#6C63FF,#EC4899);color:#fff}
+.quiz-hd h3{font-size:15px;font-weight:800}
+.quiz-hd p{font-size:12px;opacity:.85;margin-top:3px}
+.quiz-bd{padding:22px}
+.q-text{font-size:16px;font-weight:700;margin-bottom:18px;line-height:1.5}
+.q-opts{display:flex;flex-direction:column;gap:10px}
+.q-opt{padding:14px 18px;border:2px solid var(--border);border-radius:13px;cursor:pointer;font-size:14px;font-weight:600;text-align:left;background:#fff;color:var(--text);transition:all .2s}
+.q-opt:hover:not(:disabled){border-color:var(--primary);background:var(--primary-light)}
+.q-opt.correct{border-color:#10B981!important;background:#F0FDF4!important;color:#065F46!important}
+.q-opt.wrong{border-color:#EF4444!important;background:#FEF2F2!important;color:#7F1D1D!important}
+.q-opt:disabled{cursor:default}
+.q-explain{margin-top:14px;padding:14px;background:#F0FDF4;border-radius:12px;border:1px solid #BBF7D0;font-size:13px;color:#065F46;line-height:1.6;display:none}
+.q-explain.show{display:block;animation:fadeUp .3s ease}
+.q-actions{display:flex;gap:10px;margin-top:16px}
+.btn-quiz{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:700;border:none;transition:all .2s}
+.btn-quiz.next{background:var(--primary);color:#fff}
+.btn-quiz.next:hover{background:var(--primary-dark)}
+.btn-quiz.skip{background:#F3F4F6;color:var(--text-muted)}
+.q-progress{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.q-num{font-size:12px;font-weight:700;color:var(--text-muted)}
+.q-track{flex:1;height:5px;background:#F3F4F6;border-radius:10px;overflow:hidden}
+.q-track-fill{height:100%;background:linear-gradient(90deg,#6C63FF,#EC4899);border-radius:10px;transition:width .4s}
+.q-score-badge{font-size:13px;font-weight:800;color:var(--primary)}
+
+/* ===== SCORE MODAL ===== */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px)}
+.modal-card{background:#fff;border-radius:28px;padding:40px;max-width:400px;width:90%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.2);animation:fadeUp .4s ease}
+.modal-emoji{font-size:72px;margin-bottom:14px;display:block}
+.modal-score{font-size:56px;font-weight:800;background:linear-gradient(135deg,#6C63FF,#EC4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.modal-pct{font-size:18px;font-weight:700;color:var(--text-muted);margin-top:4px}
+.modal-msg{font-size:15px;color:var(--text-muted);margin:14px 0 24px;line-height:1.6}
+.modal-stars{font-size:28px;letter-spacing:4px;margin-bottom:16px}
+.btn-modal{padding:14px 36px;background:linear-gradient(135deg,#6C63FF,#EC4899);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:800;margin:4px}
+.btn-modal-outline{padding:14px 36px;background:#fff;border:2px solid var(--primary);border-radius:14px;color:var(--primary);font-size:15px;font-weight:800;margin:4px}
+
+/* ===== PROGRESS ===== */
+.prog-list{display:flex;flex-direction:column;gap:13px}
+.prog-item{background:#fff;border-radius:16px;padding:18px;border:1px solid var(--border);display:flex;align-items:center;gap:15px;box-shadow:var(--shadow)}
+.prog-ico{font-size:30px}
+.prog-info{flex:1}
+.prog-name{font-size:14px;font-weight:700}
+.prog-sub{font-size:12px;color:var(--text-muted);margin-top:3px}
+.prog-bar-wrap{height:7px;background:#F3F4F6;border-radius:10px;overflow:hidden;margin-top:10px}
+.prog-bar-fill{height:100%;border-radius:10px;transition:width 1.2s ease}
+.prog-pct-big{font-size:18px;font-weight:800;white-space:nowrap}
+
+/* ===== ANALYTICS ===== */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+.analytics-card{background:#fff;border-radius:18px;border:1px solid var(--border);padding:20px;box-shadow:var(--shadow)}
+.analytics-card h3{font-size:14px;font-weight:800;margin-bottom:16px}
+.emo-breakdown{display:flex;flex-direction:column;gap:11px}
+.eb-row{display:flex;align-items:center;gap:10px}
+.eb-lbl{font-size:12px;font-weight:600;width:82px;color:var(--text)}
+.eb-track{flex:1;height:8px;background:#F3F4F6;border-radius:10px;overflow:hidden}
+.eb-fill{height:100%;border-radius:10px;transition:width 1s ease}
+.eb-pct{font-size:12px;font-weight:700;width:34px;text-align:right;color:var(--text)}
+.stud-list{display:flex;flex-direction:column;gap:8px}
+.stud-row{display:flex;align-items:center;gap:10px;padding:10px 13px;background:#F9FAFB;border-radius:12px;cursor:pointer;transition:background .2s}
+.stud-row:hover{background:#F0EBFF}
+.sa{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.sn{flex:1;font-size:13px;font-weight:700}
+.ss{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:700}
+.e-focused{background:#D1FAE5;color:#065F46}
+.e-confused{background:#FEF3C7;color:#92400E}
+.e-bored{background:#F3F4F6;color:#374151}
+.e-frustrated{background:#FEE2E2;color:#991B1B}
+.e-happy{background:#FCE7F3;color:#9D174D}
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:90px}
+.bc-col{flex:1;display:flex;flex-direction:column;align-items:center}
+.bc-bar{width:100%;border-radius:6px 6px 0 0;transition:height .8s ease;min-height:4px}
+.bc-lbl{font-size:9px;color:var(--text-muted);margin-top:4px;font-weight:700}
+
+/* ===== PARENT ===== */
+.child-overview{background:#fff;border-radius:22px;border:1px solid var(--border);padding:22px;margin-bottom:22px;box-shadow:var(--shadow)}
+.child-hdr{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.child-av{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#6C63FF,#EC4899);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff}
+.child-name{font-size:20px;font-weight:800}
+.child-grade{font-size:13px;color:var(--text-muted);margin-top:2px}
+.child-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.cs{background:#F9FAFB;border-radius:14px;padding:14px;text-align:center}
+.cs-val{font-size:22px;font-weight:800;color:var(--text)}
+.cs-lbl{font-size:11px;color:var(--text-muted);margin-top:3px;font-weight:600}
+.emo-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.emo-pill{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:700}
+.insight-list{display:flex;flex-direction:column;gap:12px}
+.insight-it{display:flex;gap:12px;align-items:flex-start}
+.insight-dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.insight-txt{font-size:13px;line-height:1.65;color:var(--text)}
+
+/* ===== NOTIFICATIONS ===== */
+.notif-area{position:fixed;top:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.notif{background:#1A1A2E;color:#fff;border-radius:14px;padding:14px 18px;font-size:13px;font-weight:600;max-width:300px;pointer-events:all;animation:fadeUp .3s ease;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.notif-icon{font-size:20px;flex-shrink:0}
+.notif.success{background:#065F46;border-left:4px solid #10B981}
+.notif.warning{background:#92400E;border-left:4px solid #F59E0B}
+.notif.info{background:#1E3A5F;border-left:4px solid #6C63FF}
+
+/* ===== BREADCRUMB ===== */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);margin-bottom:14px}
+.breadcrumb a{cursor:pointer;color:var(--primary);font-weight:600}
+.breadcrumb a:hover{text-decoration:underline}
+.bc-sep{color:var(--border)}
+
+/* ===== TAG ===== */
+.tag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-block}
+.tag-math{background:#EEF0FF;color:#6C63FF}
+.tag-science{background:#D1FAE5;color:#065F46}
+.tag-english{background:#FEF3C7;color:#D97706}
+
+/* ===== EMPTY / LOADING ===== */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text-muted)}
+.empty-state .es-icon{font-size:56px;margin-bottom:14px}
+.empty-state h3{font-size:17px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.empty-state p{font-size:14px;line-height:1.6}
+
+/* ===== TABLES ===== */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:10px 14px;border-bottom:2px solid var(--border);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)}
+.data-table td{padding:12px 14px;border-bottom:1px solid var(--border)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:#F9FAFB}
+
+/* ===== BADGE TOOLTIP ===== */
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px}
+.badge-card{background:#fff;border-radius:16px;border:1px solid var(--border);padding:18px;text-align:center;box-shadow:var(--shadow)}
+.badge-icon{font-size:36px;margin-bottom:10px}
+.badge-name{font-size:12px;font-weight:800;color:var(--text)}
+.badge-desc{font-size:11px;color:var(--text-muted);margin-top:4px}
+.badge-card.locked{opacity:.45;filter:grayscale(1)}
+
+/* ===== PROFILE ===== */
+.profile-card{background:#fff;border-radius:22px;border:1px solid var(--border);padding:28px;box-shadow:var(--shadow)}
+.profile-row{display:flex;align-items:center;gap:20px;margin-bottom:24px}
+.profile-av{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;background:linear-gradient(135deg,#6C63FF,#EC4899);box-shadow:0 6px 20px rgba(108,99,255,.3)}
+.profile-info h2{font-size:22px;font-weight:800}
+.profile-info p{font-size:13px;color:var(--text-muted);margin-top:4px}
+.profile-form{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pf-group{display:flex;flex-direction:column;gap:6px}
+.pf-group label{font-size:12px;font-weight:700;color:var(--text-muted)}
+.pf-group input,.pf-group select{padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;transition:border-color .2s}
+.pf-group input:focus,.pf-group select:focus{border-color:var(--primary)}
+.btn-save{padding:12px 28px;background:var(--primary);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:700;margin-top:16px}
+.btn-save:hover{background:var(--primary-dark)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-240px);width:240px}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .session-grid{grid-template-columns:1fr}
+  .analytics-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NOTIFICATION AREA ===== -->
+<div id="notifArea" class="notif-area"></div>
+
+<!-- ===== AUTH SCREEN ===== -->
+<div id="authScreen">
+  <div class="auth-wrap">
+    <div class="auth-card fade-up">
+      <div class="auth-logo">
+        <div class="brain">🧠</div>
+        <h1>EmotiLearn AI</h1>
+        <p>Emotion-Adaptive Learning Platform for Grade 6–7</p>
+      </div>
+      <div id="authError" class="auth-error">Invalid username or password. Please try again.</div>
+      <div class="role-pills">
+        <button class="role-pill active" onclick="selectRole('student')">🎒 Student</button>
+        <button class="role-pill" onclick="selectRole('teacher')">📚 Teacher</button>
+        <button class="role-pill" onclick="selectRole('parent')">👨‍👩‍👧 Parent</button>
+      </div>
+      <div class="form-field">
+        <label>Username</label>
+        <input id="loginUser" type="text" placeholder="Enter your username" value="alex123">
+      </div>
+      <div class="form-field">
+        <label>Password</label>
+        <input id="loginPass" type="password" placeholder="Enter password" value="pass123">
+      </div>
+      <button class="btn-login" onclick="doLogin()">Sign In →</button>
+      <div class="demo-links">
+        Quick Demo:
+        <span onclick="quickDemo('student')">👨‍🎓 Student</span>
+        <span onclick="quickDemo('teacher')">👩‍🏫 Teacher</span>
+        <span onclick="quickDemo('parent')">👨‍👩‍👧 Parent</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="logo-txt">🧠 EmotiLearn AI</div>
+      <div class="logo-sub">Adaptive Learning Platform</div>
+    </div>
+    <div class="sb-user">
+      <div class="sb-avatar" id="sbAvatar">A</div>
+      <div>
+        <div class="sb-uname" id="sbName">Alex Johnson</div>
+        <div class="sb-urole role-s" id="sbRole">Student</div>
+      </div>
+    </div>
+    <nav class="sb-nav" id="sbNav"></nav>
+    <div class="sb-bottom">
+      <button class="btn-logout" onclick="logout()">← Sign Out</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main" id="mainView"></div>
+</div>
+
+<!-- ===== MODALS ===== -->
+<div id="scoreModal" class="modal-bg" style="display:none">
+  <div class="modal-card">
+    <span class="modal-emoji" id="modalEmoji">🎉</span>
+    <div class="modal-score" id="modalScore">8/10</div>
+    <div class="modal-pct" id="modalPct">80%</div>
+    <div class="modal-stars" id="modalStars">⭐⭐⭐⭐</div>
+    <div class="modal-msg" id="modalMsg">Great job! You answered 8 out of 10 questions correctly.</div>
+    <div>
+      <button class="btn-modal" onclick="closeModal('scoreModal');goTo('dashboard')">Back to Dashboard</button>
+      <button class="btn-modal-outline" onclick="closeModal('scoreModal')">Review Answers</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirmModal" class="modal-bg" style="display:none">
+  <div class="modal-card">
+    <span class="modal-emoji">⚠️</span>
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:10px">End Session?</h2>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">Your progress will be saved. Are you sure you want to end this learning session?</p>
+    <button class="btn-modal" onclick="endSession()">Yes, End Session</button>
+    <button class="btn-modal-outline" onclick="closeModal('confirmModal')">Continue Learning</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+// =====================================================
+// DATABASE (LocalStorage-backed)
+// =====================================================
+const DB = {
+  _k: (t,id)=> id ? `el_${t}_${id}` : `el_${t}`,
+  get(t,id){ const v=localStorage.getItem(this._k(t,id)); return v?JSON.parse(v):null },
+  set(t,id,v){ localStorage.setItem(this._k(t,id),JSON.stringify(v)) },
+  all(t){ const r=[]; for(let k in localStorage){ if(k.startsWith(`el_${t}_`)){ const v=localStorage.getItem(k); if(v) r.push(JSON.parse(v)); } } return r },
+  remove(t,id){ localStorage.removeItem(this._k(t,id)) }
+};
+
+// =====================================================
+// SEED DATA
+// =====================================================
+function initDB(){
+  if(DB.get('seeded')) return;
+  // Users
+  const users=[
+    {id:'u1',username:'alex123',password:'pass123',role:'student',name:'Alex Johnson',grade:'7',age:12,avatar:'AJ',color:'#6C63FF',parentId:'u6',teacherId:'u4'},
+    {id:'u2',username:'priya456',password:'pass123',role:'student',name:'Priya Sharma',grade:'7',age:12,avatar:'PS',color:'#EC4899',parentId:'u7',teacherId:'u4'},
+    {id:'u3',username:'raj789',password:'pass123',role:'student',name:'Raj Kumar',grade:'6',age:11,avatar:'RK',color:'#10B981',parentId:'u8',teacherId:'u5'},
+    {id:'u4',username:'ms_johnson',password:'pass123',role:'teacher',name:'Ms. R. Johnson',subject:'Mathematics',avatar:'RJ',color:'#6C63FF'},
+    {id:'u5',username:'mr_patel',password:'pass123',role:'teacher',name:'Mr. S. Patel',subject:'Science',avatar:'SP',color:'#10B981'},
+    {id:'u6',username:'parent_alex',password:'pass123',role:'parent',name:'Mr. K. Johnson',childId:'u1',avatar:'KJ',color:'#F59E0B'},
+    {id:'u7',username:'parent_priya',password:'pass123',role:'parent',name:'Mrs. Meera Sharma',childId:'u2',avatar:'MS',color:'#EC4899'},
+    {id:'u8',username:'parent_raj',password:'pass123',role:'parent',name:'Mr. Arun Kumar',childId:'u3',avatar:'AK',color:'#10B981'}
+  ];
+  users.forEach(u=> DB.set('user', u.id, u));
+
+  // Student progress
+  const progress={
+    'u1':{ math:72, science:45, english:60,
+      sessions:12, totalMinutes:260, quizzesDone:24, avgScore:85,
+      badges:['first_session','quiz_master','week_streak'],
+      emotionLog:['focused','focused','confused','focused','happy','bored','focused','focused','frustrated','focused','focused','happy']
+    },
+    'u2':{ math:55, science:70, english:40, sessions:9, totalMinutes:185, quizzesDone:18, avgScore:72, badges:['first_session'],
+      emotionLog:['confused','focused','confused','focused','bored','focused','frustrated','confused','focused']
+    },
+    'u3':{ math:68, science:50, english:75, sessions:7, totalMinutes:145, quizzesDone:14, avgScore:79, badges:['first_session','week_streak'],
+      emotionLog:['bored','focused','happy','bored','focused','focused','happy']
+    }
+  };
+  for(let [uid,p] of Object.entries(progress)) DB.set('progress', uid, p);
+
+  // Quiz results
+  const qresults=[
+    {id:'qr1',userId:'u1',subject:'math',topic:'algebra',score:8,total:10,pct:80,date:'2026-03-15',emotions:['focused','focused','confused','focused']},
+    {id:'qr2',userId:'u1',subject:'science',topic:'forces',score:7,total:10,pct:70,date:'2026-03-14',emotions:['focused','happy','focused','focused']},
+    {id:'qr3',userId:'u1',subject:'math',topic:'fractions',score:9,total:10,pct:90,date:'2026-03-13',emotions:['focused','focused','focused','happy']},
+    {id:'qr4',userId:'u2',subject:'science',topic:'cells',score:7,total:10,pct:70,date:'2026-03-15',emotions:['confused','focused','frustrated','focused']},
+    {id:'qr5',userId:'u3',subject:'english',topic:'grammar',score:8,total:10,pct:80,date:'2026-03-15',emotions:['bored','happy','focused','focused']}
+  ];
+  qresults.forEach(q=> DB.set('qresult', q.id, q));
+
+  DB.set('seeded',null,true);
+}
+initDB();
+
+// =====================================================
+// APP STATE
+// =====================================================
+const S = {
+  currentUser: null,
+  currentPage: '',
+  subject: null,
+  topic: null,
+  emotion: 'focused',
+  emotionProbs: {focused:.75,happy:.10,confused:.08,bored:.05,frustrated:.02},
+  webcamActive: false,
+  webcamStream: null,
+  emotionInterval: null,
+  sessionActive: false,
+  sessionEmotions: [],
+  quizState: { questions:[], idx:0, answers:[], score:0, active:false }
+};
+
+// =====================================================
+// EMOTION CONFIG
+// =====================================================
+const EMOTIONS = {
+  focused:   {emoji:'😊',color:'#10B981',label:'Focused'},
+  confused:  {emoji:'😕',color:'#F59E0B',label:'Confused'},
+  bored:     {emoji:'😴',color:'#6B7280',label:'Bored'},
+  happy:     {emoji:'😄',color:'#EC4899',label:'Happy'},
+  frustrated:{emoji:'😤',color:'#EF4444',label:'Frustrated'}
+};
+
+const EMOTION_ACTIONS = {
+  focused:   ['Maintain current learning pace','Introduce slightly advanced material','Award focus badge'],
+  confused:  ['Switch to simpler explanation','Show more worked examples','Break problem into smaller steps'],
+  bored:     ['Launch interactive mini-quiz','Introduce gamified challenge','Show fun real-world application'],
+  happy:     ['Celebrate progress with badge','Move to next topic','Offer bonus challenge'],
+  frustrated:['Slow down the pace','Provide step-by-step hints','Offer a short break suggestion']
+};
+
+// =====================================================
+// CURRICULUM DATA
+// =====================================================
+const SUBJECTS = [
+  { id:'math', name:'Mathematics', icon:'➕', color:'#6C63FF', bg:'#EEF0FF', desc:'Algebra, Geometry & Numbers',
+    topics:[
+      {id:'fractions',name:'Fractions & Decimals',status:'done',icon:'½'},
+      {id:'algebra',name:'Introduction to Algebra',status:'inprog',icon:'x'},
+      {id:'geometry',name:'Geometry Basics',status:'new',icon:'△'},
+      {id:'ratios',name:'Ratios & Proportions',status:'new',icon:'∶'},
+      {id:'statistics',name:'Basic Statistics',status:'new',icon:'📊'}
+    ]
+  },
+  { id:'science', name:'Science', icon:'🔬', color:'#10B981', bg:'#D1FAE5', desc:'Physics, Chemistry & Biology',
+    topics:[
+      {id:'cells',name:'Cell Structure',status:'done',icon:'🔵'},
+      {id:'forces',name:'Forces & Motion',status:'inprog',icon:'⚡'},
+      {id:'photosynthesis',name:'Photosynthesis',status:'new',icon:'🌿'},
+      {id:'atoms',name:'Atoms & Molecules',status:'new',icon:'⚛'},
+      {id:'ecosystems',name:'Ecosystems',status:'new',icon:'🌍'}
+    ]
+  },
+  { id:'english', name:'English', icon:'📖', color:'#F59E0B', bg:'#FEF3C7', desc:'Grammar, Writing & Literature',
+    topics:[
+      {id:'grammar',name:'Parts of Speech',status:'done',icon:'🔤'},
+      {id:'essay',name:'Essay Writing',status:'inprog',icon:'✍'},
+      {id:'comprehension',name:'Reading Comprehension',status:'new',icon:'📰'},
+      {id:'vocab',name:'Vocabulary Building',status:'new',icon:'📚'},
+      {id:'poetry',name:'Poetry Analysis',status:'new',icon:'🎭'}
+    ]
+  }
+];
+
+const LESSONS = {
+  algebra:{
+    title:'Introduction to Algebra', subject:'Math', color:'#6C63FF',
+    content:'Algebra is a branch of mathematics that uses letters (called variables) to represent unknown numbers. We write equations to find the value of these unknowns.',
+    formula:'ax + b = c', formulaNote:"Linear equation — solve by isolating 'x'",
+    explanation:"A variable is a letter like 'x' that represents a mystery number. An equation is a statement that two expressions are equal. We solve it by doing the same operation to both sides.",
+    simpleExplanation:"Think of x as a mystery box 📦. If 'x + 3 = 7', we're asking: what number plus 3 equals 7? We subtract 3 from both sides to find x = 4. Like unwrapping the box!",
+    hint:"Start by moving all numbers to one side of the = sign. If the equation is 2x + 4 = 10, subtract 4 from both sides first to get 2x = 6.",
+    examples:[
+      {q:'2x + 4 = 10', a:'x = 3', detail:'Subtract 4: 2x = 6. Divide by 2: x = 3'},
+      {q:'3x − 6 = 9', a:'x = 5', detail:'Add 6: 3x = 15. Divide by 3: x = 5'},
+      {q:'x/2 + 1 = 4', a:'x = 6', detail:'Subtract 1: x/2 = 3. Multiply by 2: x = 6'},
+      {q:'4x = 24', a:'x = 6', detail:'Divide both sides by 4: x = 6'}
+    ],
+    keyPoints:['Variables represent unknown values','Solve by keeping equations balanced','Whatever you do to one side, do to the other','Check your answer by substituting back in'],
+    quiz:[
+      {q:'If 5x + 2 = 17, what is x?', opts:['x = 2','x = 3','x = 4','x = 5'],correct:1,explain:'Subtract 2: 5x = 15. Divide by 5: x = 3 ✓'},
+      {q:'Solve: 4x − 8 = 12', opts:['x = 1','x = 4','x = 5','x = 6'],correct:2,explain:'Add 8: 4x = 20. Divide by 4: x = 5 ✓'},
+      {q:'What does "variable" mean in algebra?', opts:['A fixed number','A letter representing an unknown','The answer','An operation'],correct:1,explain:'A variable (like x, y, z) represents an unknown number we want to find ✓'},
+      {q:'If 2x = 14, what is x?', opts:['x = 5','x = 6','x = 7','x = 8'],correct:2,explain:'Divide both sides by 2: x = 7 ✓'},
+      {q:'Solve: x/3 = 4', opts:['x = 1','x = 7','x = 12','x = 16'],correct:2,explain:'Multiply both sides by 3: x = 12 ✓'},
+      {q:'Which is a valid algebra equation?', opts:['x + ? = 5','2 + 2 = 4','3x + 1 = 10','= 7'],correct:2,explain:'An equation has a variable and an equals sign with numbers on both sides ✓'},
+      {q:'If x + x = 10, what is x?', opts:['x = 2','x = 5','x = 10','x = 20'],correct:1,explain:'x + x = 2x = 10. Divide by 2: x = 5 ✓'},
+      {q:'Solve: 3x + 3 = 15', opts:['x = 3','x = 4','x = 5','x = 6'],correct:1,explain:'Subtract 3: 3x = 12. Divide by 3: x = 4 ✓'},
+      {q:'What is the first step to solve 7x − 3 = 18?', opts:['Divide by 7','Multiply by 3','Add 3 to both sides','Subtract 18'],correct:2,explain:'Add 3 to both sides: 7x = 21. Then divide by 7: x = 3 ✓'},
+      {q:'If 6x = 42, what is x?', opts:['x = 5','x = 6','x = 7','x = 8'],correct:2,explain:'Divide both sides by 6: x = 7 ✓'}
+    ]
+  },
+  forces:{
+    title:'Forces & Motion', subject:'Science', color:'#10B981',
+    content:"A force is a push or pull that acts on an object. Forces can change an object's speed, direction, or shape. Sir Isaac Newton described the laws of motion that govern how forces work.",
+    formula:'F = m × a', formulaNote:"Newton's Second Law — Force = Mass × Acceleration",
+    explanation:'Force (measured in Newtons) equals the mass of the object (in kg) multiplied by its acceleration (in m/s²). A heavier object needs more force to achieve the same acceleration.',
+    simpleExplanation:"Imagine pushing a toy car 🚗 vs a real car 🚙. You need WAY more force for the real car because it has more mass. That's F = m × a in action! More mass → more force needed.",
+    hint:"Remember: Force = Mass × Acceleration. If you need to find mass, rearrange to m = F ÷ a. If you need acceleration, use a = F ÷ m.",
+    examples:[
+      {q:'F = ? (m=5kg, a=2m/s²)', a:'F = 10 N', detail:'F = 5 × 2 = 10 Newtons'},
+      {q:'F = ? (m=3kg, a=4m/s²)', a:'F = 12 N', detail:'F = 3 × 4 = 12 Newtons'},
+      {q:'m = ? (F=20N, a=4m/s²)', a:'m = 5 kg', detail:'m = F÷a = 20÷4 = 5 kg'},
+      {q:'a = ? (F=30N, m=6kg)', a:'a = 5 m/s²', detail:'a = F÷m = 30÷6 = 5 m/s²'}
+    ],
+    keyPoints:["Force is measured in Newtons (N)",'F = m × a is Newton\'s Second Law','More mass requires more force for same acceleration','Forces can be balanced or unbalanced'],
+    quiz:[
+      {q:'A 10 kg object accelerates at 3 m/s². What is the force?', opts:['10 N','13 N','30 N','300 N'],correct:2,explain:'F = m × a = 10 × 3 = 30 Newtons ✓'},
+      {q:'What unit is force measured in?', opts:['Kilogram','Metre','Newton','Joule'],correct:2,explain:'Force is measured in Newtons (N), named after Sir Isaac Newton ✓'},
+      {q:'If F = 24 N and m = 6 kg, what is the acceleration?', opts:['2 m/s²','3 m/s²','4 m/s²','6 m/s²'],correct:2,explain:'a = F ÷ m = 24 ÷ 6 = 4 m/s² ✓'},
+      {q:'A 4 kg ball accelerates at 5 m/s². What force is needed?', opts:['1 N','9 N','20 N','20 kg'],correct:2,explain:'F = m × a = 4 × 5 = 20 Newtons ✓'},
+      {q:'What does "acceleration" mean?', opts:['Speed','Change in speed over time','Distance','Weight'],correct:1,explain:'Acceleration is the rate of change of velocity (speed) over time ✓'},
+      {q:'Which scientist described F = ma?', opts:['Einstein','Galileo','Newton','Darwin'],correct:2,explain:"Isaac Newton's Second Law of Motion states F = ma ✓"},
+      {q:'If mass doubles but force stays the same, what happens to acceleration?', opts:['Doubles','Halves','Stays same','Triples'],correct:1,explain:'a = F/m. If m doubles and F stays same, a is halved ✓'},
+      {q:'A 2 kg toy car is pushed with 8 N. What is its acceleration?', opts:['2 m/s²','4 m/s²','6 m/s²','16 m/s²'],correct:1,explain:'a = F ÷ m = 8 ÷ 2 = 4 m/s² ✓'},
+      {q:'What is a "balanced force"?', opts:['Force = 0','Equal forces in opposite directions','One large force','No gravity'],correct:1,explain:'Balanced forces are equal in size but opposite in direction, resulting in no acceleration ✓'},
+      {q:'Force of 50 N acts on 5 kg object. What is acceleration?', opts:['5 m/s²','10 m/s²','25 m/s²','250 m/s²'],correct:1,explain:'a = F ÷ m = 50 ÷ 5 = 10 m/s² ✓'}
+    ]
+  },
+  grammar:{
+    title:'Parts of Speech', subject:'English', color:'#F59E0B',
+    content:'Every word in English belongs to a "part of speech" based on its function in a sentence. The eight main parts of speech are: noun, pronoun, verb, adjective, adverb, preposition, conjunction, and interjection.',
+    formula:'Noun + Verb + Object', formulaNote:'Basic sentence structure in English',
+    explanation:"Nouns name people, places, or things. Verbs show actions or states. Adjectives describe nouns. Adverbs describe verbs. Understanding parts of speech helps you write and speak clearly.",
+    simpleExplanation:"Imagine building a house 🏠: nouns are the bricks (the things), verbs are the workers (the actions), adjectives are the paint (the descriptions), and adverbs tell how fast the workers work!",
+    hint:"To identify a part of speech, ask: Does it NAME something? (noun) Does it show ACTION or state? (verb) Does it DESCRIBE a noun? (adjective) Does it DESCRIBE a verb? (adverb)",
+    examples:[
+      {q:'"The happy dog runs."', a:'dog=noun, runs=verb', detail:'"happy" is an adjective describing the dog'},
+      {q:'"She quickly read the book."', a:'quickly=adverb', detail:'"quickly" describes HOW she read'},
+      {q:'"Birds fly south."', a:'Birds=noun, fly=verb', detail:'"south" is an adverb telling where'},
+      {q:'"The tall, old tree fell."', a:'tall, old = adjectives', detail:'Both describe the noun "tree"'}
+    ],
+    keyPoints:['Nouns name people, places, things, ideas','Verbs show action or state of being','Adjectives describe nouns','Adverbs describe verbs, adjectives, or other adverbs'],
+    quiz:[
+      {q:'Which word is a noun in: "The cat sat on the mat."', opts:['sat','on','cat','the'],correct:2,explain:'"cat" names a thing — it is a noun ✓'},
+      {q:'Which word is a verb in: "She quickly runs every morning."', opts:['She','quickly','runs','every'],correct:2,explain:'"runs" is an action word — it is a verb ✓'},
+      {q:'What part of speech is "beautiful" in: "She wore a beautiful dress."', opts:['Noun','Verb','Adjective','Adverb'],correct:2,explain:'"beautiful" describes the noun "dress" — it is an adjective ✓'},
+      {q:'Identify the adverb: "He spoke very loudly."', opts:['He','spoke','very','loudly'],correct:3,explain:'"loudly" describes HOW he spoke — it is an adverb ✓'},
+      {q:'How many main parts of speech are there in English?', opts:['6','7','8','9'],correct:2,explain:'There are 8 main parts of speech: noun, pronoun, verb, adjective, adverb, preposition, conjunction, interjection ✓'},
+      {q:'Which is a pronoun in: "They went to school."', opts:['went','to','school','They'],correct:3,explain:'"They" replaces a noun — it is a pronoun ✓'},
+      {q:'What is "and" in: "Tom and Jerry are friends."', opts:['Noun','Verb','Conjunction','Preposition'],correct:2,explain:'"and" joins two nouns — it is a conjunction ✓'},
+      {q:'Identify the preposition: "The book is on the table."', opts:['book','is','on','table'],correct:2,explain:'"on" shows the relationship between book and table — it is a preposition ✓'},
+      {q:'What part of speech is "Wow!" in a sentence?', opts:['Noun','Verb','Interjection','Adjective'],correct:2,explain:'"Wow!" expresses strong emotion — it is an interjection ✓'},
+      {q:'Which sentence has an adjective?', opts:['Birds fly.','She runs fast.','The red apple fell.','He slept.'],correct:2,explain:'"red" describes the apple — it is an adjective ✓'}
+    ]
+  }
+};
+
+const BADGES = [
+  {id:'first_session',name:'First Steps',icon:'👣',desc:'Completed first session'},
+  {id:'quiz_master',name:'Quiz Master',icon:'🏆',desc:'Score 90%+ on a quiz'},
+  {id:'week_streak',name:'Weekly Streak',icon:'🔥',desc:'7 days in a row'},
+  {id:'emotion_pro',name:'Emotion Pro',icon:'🎭',desc:'10 sessions tracked'},
+  {id:'math_whiz',name:'Math Whiz',icon:'🔢',desc:'Complete all math topics'},
+  {id:'science_star',name:'Science Star',icon:'⭐',desc:'Complete all science topics'}
+];
+
+const STUDENTS_DEMO = [
+  {id:'u1',name:'Alex Johnson',color:'#6C63FF',emotion:'focused',score:85,sessions:12,time:'4h 20m',grade:'7'},
+  {id:'u2',name:'Priya Sharma',color:'#EC4899',emotion:'confused',score:72,sessions:9,time:'3h 05m',grade:'7'},
+  {id:'u3',name:'Raj Kumar',color:'#10B981',emotion:'bored',score:79,sessions:7,time:'2h 45m',grade:'6'}
+];
+
+// =====================================================
+// AUTH
+// =====================================================
+let selectedRole = 'student';
+function selectRole(r){
+  selectedRole = r;
+  document.querySelectorAll('.role-pill').forEach((p,i)=>{
+    p.classList.toggle('active', ['student','teacher','parent'][i]===r);
+  });
+  const presets = {student:'alex123',teacher:'ms_johnson',parent:'parent_alex'};
+  document.getElementById('loginUser').value = presets[r];
+}
+
+function quickDemo(role){ selectRole(role); doLogin(); }
+
+function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  const err = document.getElementById('authError');
+  err.style.display='none';
+  // Find user
+  let found = null;
+  const all = DB.all('user');
+  for(const usr of all){
+    if(usr.username===u && usr.password===p){ found=usr; break; }
+  }
+  if(!found){ err.style.display='block'; return; }
+  S.currentUser = found;
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  // Set sidebar info
+  document.getElementById('sbAvatar').textContent = found.avatar||found.name[0];
+  document.getElementById('sbAvatar').style.background = found.color||'#6C63FF';
+  document.getElementById('sbName').textContent = found.name;
+  document.getElementById('sbRole').textContent = found.role.charAt(0).toUpperCase()+found.role.slice(1);
+  document.getElementById('sbRole').className = `sb-urole role-${found.role[0]}`;
+  buildNav();
+  goTo('dashboard');
+  notify('Welcome back, '+found.name+'! 👋', 'success');
+}
+
+function logout(){
+  stopWebcam(); stopEmotionSim();
+  S.currentUser=null; S.sessionActive=false;
+  document.getElementById('app').style.display='none';
+  document.getElementById('authScreen').style.display='flex';
+  document.getElementById('loginPass').value='';
+  notify('Signed out successfully','info');
+}
+
+// =====================================================
+// NAVIGATION
+// =====================================================
+const NAVS = {
+  student:[
+    {sec:'Dashboard',items:[{id:'dashboard',icon:'🏠',lbl:'Dashboard'},{id:'subjects',icon:'📚',lbl:'My Subjects'}]},
+    {sec:'Learning',items:[{id:'progress',icon:'📈',lbl:'My Progress'},{id:'quiz',icon:'✏️',lbl:'Quick Quiz'},{id:'badges',icon:'🏆',lbl:'My Badges'}]},
+    {sec:'Account',items:[{id:'profile',icon:'👤',lbl:'Profile'}]}
+  ],
+  teacher:[
+    {sec:'Overview',items:[{id:'dashboard',icon:'🏠',lbl:'Dashboard'},{id:'students',icon:'👥',lbl:'My Students'}]},
+    {sec:'Insights',items:[{id:'analytics',icon:'📊',lbl:'Analytics'},{id:'reports',icon:'📋',lbl:'Reports'}]},
+    {sec:'Account',items:[{id:'profile',icon:'👤',lbl:'Profile'}]}
+  ],
+  parent:[
+    {sec:'My Child',items:[{id:'dashboard',icon:'🏠',lbl:'Dashboard'},{id:'progress',icon:'📈',lbl:'Progress Report'}]},
+    {sec:'Insights',items:[{id:'emotions',icon:'💭',lbl:'Emotion Insights'},{id:'reports',icon:'📋',lbl:'Full Report'}]},
+    {sec:'Account',items:[{id:'profile',icon:'👤',lbl:'Profile'}]}
+  ]
+};
+
+function buildNav(){
+  const nav = document.getElementById('sbNav');
+  const cfg = NAVS[S.currentUser.role]||[];
+  nav.innerHTML = cfg.map(sec=>`
+    <div class="nav-sec">${sec.sec}</div>
+    ${sec.items.map(it=>`
+      <button class="nav-item" id="nav-${it.id}" onclick="goTo('${it.id}')">
+        <span class="nav-icon">${it.icon}</span>${it.lbl}
+      </button>`).join('')}
+  `).join('');
+}
+
+function goTo(page, extra){
+  S.currentPage = page;
+  if(extra) Object.assign(S, extra);
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.toggle('active', n.id==='nav-'+page);
+  });
+  // Stop session if leaving
+  if(S.sessionActive && page!=='session'){ stopEmotionSim(); S.sessionActive=false; }
+  const pages={
+    student:{dashboard:pgStudentDash,subjects:pgSubjects,progress:pgStudentProgress,session:pgSession,topics:pgTopics,quiz:pgQuickQuiz,badges:pgBadges,profile:pgProfile},
+    teacher:{dashboard:pgTeacherDash,students:pgStudents,analytics:pgAnalytics,reports:pgTeacherReports,profile:pgProfile},
+    parent:{dashboard:pgParentDash,progress:pgParentProgress,emotions:pgEmotionInsights,reports:pgParentReport,profile:pgProfile}
+  };
+  const fn=(pages[S.currentUser.role]||{})[page];
+  if(fn){ fn(); } else { pgNotFound(); }
+}
+
+// =====================================================
+// EMOTION SIMULATION ENGINE
+// =====================================================
+const EMOTION_SEQ = ['focused','focused','focused','confused','focused','bored','focused','focused','happy','focused','frustrated','focused','focused','focused'];
+let eSeqIdx = 0;
+
+function startEmotionSim(){
+  stopEmotionSim();
+  eSeqIdx = 0;
+  S.emotionInterval = setInterval(()=>{
+    eSeqIdx = (eSeqIdx+1) % EMOTION_SEQ.length;
+    S.emotion = EMOTION_SEQ[eSeqIdx];
+    S.sessionEmotions.push(S.emotion);
+    updateEmotionProbs();
+    updateEmotionUI();
+  }, 4500);
+}
+
+function stopEmotionSim(){
+  if(S.emotionInterval){ clearInterval(S.emotionInterval); S.emotionInterval=null; }
+}
+
+function updateEmotionProbs(){
+  const base = {focused:.08,confused:.08,bored:.08,happy:.08,frustrated:.08};
+  base[S.emotion] = .72;
+  // Normalize
+  const tot = Object.values(base).reduce((a,b)=>a+b,0);
+  for(let k in base) base[k]=+(base[k]/tot).toFixed(2);
+  S.emotionProbs = base;
+}
+
+function updateEmotionUI(){
+  const em = EMOTIONS[S.emotion];
+  const emoji = document.getElementById('eEmoji');
+  const dot = document.getElementById('eDot');
+  const nm = document.getElementById('eLabel');
+  const barsEl = document.getElementById('eBars');
+  const actEl = document.getElementById('adaptActions');
+  if(emoji){ emoji.textContent=em.emoji; emoji.style.animation='none'; setTimeout(()=>emoji.style.animation='emotionPop .6s ease',10); }
+  if(dot) dot.style.background=em.color;
+  if(nm){ nm.textContent=em.label; nm.style.color=em.color; }
+  if(barsEl) barsEl.innerHTML = renderEmoBars();
+  if(actEl) actEl.innerHTML = renderAdaptActions();
+  // Update lesson body for adaptation
+  refreshLessonAdaptation();
+}
+
+function renderEmoBars(){
+  return Object.entries(EMOTIONS).map(([k,v])=>`
+    <div class="ebar">
+      <div class="ebar-nm">${v.emoji} ${v.label}</div>
+      <div class="ebar-track"><div class="ebar-fill" style="width:${Math.round((S.emotionProbs[k]||.04)*100)}%;background:${v.color}"></div></div>
+      <div class="ebar-pct">${Math.round((S.emotionProbs[k]||.04)*100)}%</div>
+    </div>`).join('');
+}
+
+function renderAdaptActions(){
+  const actions = EMOTION_ACTIONS[S.emotion]||EMOTION_ACTIONS.focused;
+  const em = EMOTIONS[S.emotion];
+  const icons=['🎯','📝','⚡'];
+  return actions.map((a,i)=>`
+    <div class="adapt-item">
+      <div class="adapt-item-icon">${icons[i]}</div>
+      <div>
+        <div class="adapt-item-txt">${a}</div>
+        <div class="adapt-item-sub" style="color:${em.color}">${em.label} mode active</div>
+      </div>
+    </div>`).join('');
+}
+
+function refreshLessonAdaptation(){
+  const box = document.getElementById('adaptBox');
+  if(!box) return;
+  const lesson = getCurrentLesson();
+  if(!lesson) return;
+  let html='';
+  if(S.emotion==='confused'){
+    html=`<div class="adapt-simple"><div class="adapt-icon">💡</div><div class="adapt-txt"><strong>Simpler Explanation:</strong><br>${lesson.simpleExplanation}</div></div>`;
+  } else if(S.emotion==='frustrated'){
+    html=`<div class="adapt-hint"><div class="adapt-icon">💭</div><div class="adapt-txt"><strong>Hint:</strong> ${lesson.hint}</div></div>`;
+  } else if(S.emotion==='bored'){
+    html=`<div class="adapt-quiz"><div class="adapt-icon" style="font-size:18px">🎮</div> <strong>Feeling bored? Try the quiz below!</strong> Interactive challenges are waiting for you.</div>`;
+  }
+  box.innerHTML=html;
+}
+
+function getCurrentLesson(){
+  return LESSONS[S.topic] || Object.values(LESSONS)[0];
+}
+
+// =====================================================
+// WEBCAM
+// =====================================================
+async function toggleWebcam(){
+  if(S.webcamActive){ stopWebcam(); return; }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:{width:320,height:240},audio:false});
+    S.webcamStream = stream;
+    S.webcamActive = true;
+    const vid = document.getElementById('videoEl');
+    const ph = document.getElementById('facePH');
+    if(vid){
+      vid.srcObject = stream;
+      vid.play();
+      vid.style.display='block';
+      if(ph) ph.style.display='none';
+    }
+    const btn = document.getElementById('camBtn');
+    if(btn) btn.textContent='⏹ Stop Camera';
+    notify('Webcam enabled — emotion detection active!','success');
+  } catch(e){
+    notify('Webcam access denied. Using simulated detection.','warning');
+  }
+}
+
+function stopWebcam(){
+  if(S.webcamStream){ S.webcamStream.getTracks().forEach(t=>t.stop()); S.webcamStream=null; }
+  S.webcamActive=false;
+  const vid=document.getElementById('videoEl');
+  const ph=document.getElementById('facePH');
+  if(vid){ vid.style.display='none'; vid.srcObject=null; }
+  if(ph) ph.style.display='flex';
+  const btn=document.getElementById('camBtn');
+  if(btn) btn.textContent='📷 Enable Camera';
+}
+
+// =====================================================
+// NOTIFICATIONS
+// =====================================================
+function notify(msg, type='info'){
+  const area = document.getElementById('notifArea');
+  const div = document.createElement('div');
+  div.className = `notif ${type}`;
+  const icons={success:'✅',warning:'⚠️',info:'ℹ️'};
+  div.innerHTML=`<span class="notif-icon">${icons[type]||'ℹ️'}</span>${msg}`;
+  area.appendChild(div);
+  setTimeout(()=>{ div.style.opacity='0'; div.style.transition='opacity .4s'; setTimeout(()=>div.remove(),400); },3500);
+}
+
+// =====================================================
+// UTILITIES
+// =====================================================
+function getProgress(uid){ return DB.get('progress', uid||S.currentUser?.id)||{math:0,science:0,english:0,sessions:0,quizzesDone:0,avgScore:0,badges:[],emotionLog:[]}; }
+function fmt(n){ return String(n).padStart(2,'0'); }
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function closeModal(id){ document.getElementById(id).style.display='none'; }
+function setMain(html){ document.getElementById('mainView').innerHTML=`<div class="fade-up">${html}</div>`; }
+
+function breadcrumb(items){
+  return `<div class="breadcrumb">${items.map((it,i)=>
+    i<items.length-1 ? `<a onclick="${it.fn||''}">${it.lbl}</a><span class="bc-sep">›</span>` : `<span>${it.lbl}</span>`
+  ).join('')}</div>`;
+}
+
+// =====================================================
+// ===== STUDENT PAGES =====
+// =====================================================
+function pgStudentDash(){
+  const p = getProgress(S.currentUser.id);
+  const h = new Date().getHours();
+  const greet = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  setMain(`
+    <div class="pg-header">
+      <h1>${greet}, ${S.currentUser.name.split(' ')[0]}! 👋</h1>
+      <p>Ready to learn something amazing today?</p>
+    </div>
+    <div class="pg-body">
+      <div class="stats-grid">
+        <div class="stat-card sc-purple"><div class="stat-val">${p.sessions}</div><div class="stat-lbl">Sessions Done</div><div class="stat-trend trend-up">↑ Keep it up!</div></div>
+        <div class="stat-card sc-pink"><div class="stat-val">${p.avgScore}%</div><div class="stat-lbl">Avg Quiz Score</div><div class="stat-trend trend-up">↑ Improving!</div></div>
+        <div class="stat-card sc-green"><div class="stat-val">${Math.round(p.totalMinutes/60*10)/10}h</div><div class="stat-lbl">Study Time</div><div class="stat-trend trend-up">Great effort</div></div>
+        <div class="stat-card sc-amber"><div class="stat-val">${p.badges.length}</div><div class="stat-lbl">Badges Earned</div><div class="stat-trend trend-up">Collect more!</div></div>
+      </div>
+      <div class="section-ttl">Continue Learning ✨</div>
+      <div class="subj-grid">
+        ${SUBJECTS.map(s=>`
+          <div class="subj-card" onclick="S.subject='${s.id}';goTo('topics')">
+            <div class="subj-icon">${s.icon}</div>
+            <div class="subj-name">${s.name}</div>
+            <div class="subj-desc">${s.desc}</div>
+            <div class="prog-track"><div class="prog-fill" style="width:${p[s.id.slice(0,3)]||0}%;background:${s.color}"></div></div>
+            <div class="subj-meta"><span>${p[s.id.slice(0,3)]||0}% complete</span><span style="color:${s.color};font-weight:700">Start →</span></div>
+          </div>`).join('')}
+      </div>
+      <div class="section-ttl" style="margin-top:28px">Recent Emotion Snapshot</div>
+      <div class="card" style="padding:20px">
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px">Your emotional state during last learning session:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${(p.emotionLog||[]).slice(-8).map(e=>`
+            <div class="emo-pill" style="background:${EMOTIONS[e].color}20;color:${EMOTIONS[e].color}">
+              ${EMOTIONS[e].emoji} ${EMOTIONS[e].label}
+            </div>`).join('')}
+        </div>
+        <button class="btn-ln solid" style="margin-top:16px;flex:none;padding:11px 22px;font-size:13px" onclick="pgSubjects()">Start a New Session →</button>
+      </div>
+    </div>`);
+}
+
+function pgSubjects(){
+  S.currentPage='subjects';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.id==='nav-subjects'));
+  const p = getProgress(S.currentUser.id);
+  setMain(`
+    <div class="pg-header"><h1>My Subjects 📚</h1><p>Choose a subject to start learning</p></div>
+    <div class="pg-body">
+      <div class="subj-grid">
+        ${SUBJECTS.map(s=>{
+          const pct = p[s.id.slice(0,3)]||0;
+          const done = s.topics.filter(t=>t.status==='done').length;
+          return `
+            <div class="subj-card" onclick="S.subject='${s.id}';goTo('topics')">
+              <div class="subj-icon">${s.icon}</div>
+              <div class="subj-name">${s.name}</div>
+              <div class="subj-desc">${s.desc}</div>
+              <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px">
+                ${s.topics.map(t=>`<span class="tag" style="background:${s.color}20;color:${s.color};font-size:10px">${t.icon} ${t.name}</span>`).join('')}
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${s.color}"></div></div>
+              <div class="subj-meta"><span>${pct}% complete</span><span>${done}/${s.topics.length} topics</span></div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`);
+}
+
+function pgTopics(){
+  const subj = SUBJECTS.find(s=>s.id===S.subject)||SUBJECTS[0];
+  setMain(`
+    <div class="pg-header">
+      ${breadcrumb([{lbl:'Subjects',fn:"goTo('subjects')"},{lbl:subj.name}])}
+      <h1>${subj.icon} ${subj.name}</h1>
+      <p>Select a topic to begin your learning session</p>
+    </div>
+    <div class="pg-body">
+      <div class="topic-list">
+        ${subj.topics.map(t=>`
+          <div class="topic-row${t.status==='inprog'?' active':''}" onclick="S.topic='${t.id}';goTo('session')">
+            <div class="t-icon">${t.icon}</div>
+            <div class="t-name">${t.name}</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="t-badge b-${t.status==='done'?'done':t.status==='inprog'?'inprog':t.status==='new'?'new':'locked'}">
+                ${t.status==='done'?'✓ Done':t.status==='inprog'?'In Progress':t.status==='new'?'New':'🔒 Locked'}
+              </span>
+              <span style="color:${subj.color};font-size:18px;font-weight:700">›</span>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`);
+}
+
+function pgSession(){
+  const lesson = getCurrentLesson();
+  if(!lesson){ notify('Lesson not found','warning'); goTo('subjects'); return; }
+  S.sessionActive = true;
+  S.sessionEmotions = [];
+  S.emotion = 'focused';
+  S.quizState = {questions:[],idx:0,answers:[],score:0,active:false};
+  startEmotionSim();
+  const subj = SUBJECTS.find(s=>s.topics.some(t=>t.id===S.topic))||SUBJECTS[0];
+
+  setMain(`
+    <div class="pg-header">
+      ${breadcrumb([{lbl:'Subjects',fn:"goTo('subjects')"},{lbl:subj.name,fn:"goTo('topics')"},{lbl:lesson.title}])}
+      <h1>${lesson.title}</h1>
+      <p>AI-powered adaptive learning session • Emotion monitoring active</p>
+    </div>
+    <div class="pg-body">
+      <div class="session-grid">
+        <!-- Lesson Panel -->
+        <div>
+          <div class="lesson-wrap">
+            <div class="lesson-hd">
+              <div class="lesson-title">📖 ${lesson.title}</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="tag" style="background:${lesson.color}20;color:${lesson.color}">${lesson.subject}</span>
+                <button onclick="closeModal('confirmModal')||document.getElementById('confirmModal').style.display='flex'" style="padding:7px 14px;background:#FFF5F5;border:1px solid #FED7D7;border-radius:8px;color:#E53E3E;font-size:12px;font-weight:700">End Session</button>
+              </div>
+            </div>
+            <div class="lesson-body">
+              <h2>${lesson.title}</h2>
+              <p>${lesson.content}</p>
+              <div class="formula-box">
+                <div class="formula">${lesson.formula}</div>
+                <div class="formula-note">${lesson.formulaNote}</div>
+              </div>
+              <p>${lesson.explanation}</p>
+              <!-- Adaptive Box -->
+              <div id="adaptBox"></div>
+              <!-- Key Points -->
+              <div style="background:#F9FAFB;border-radius:14px;padding:16px;margin:14px 0;border:1px solid var(--border)">
+                <div style="font-size:12px;font-weight:800;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Key Points</div>
+                ${lesson.keyPoints.map(kp=>`<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:${lesson.color};font-weight:800;flex-shrink:0">✓</span><span style="font-size:13px;color:var(--text)">${kp}</span></div>`).join('')}
+              </div>
+              <!-- Examples -->
+              <div class="section-ttl" style="font-size:14px;margin:16px 0 10px">Worked Examples</div>
+              <div class="examples-grid">
+                ${lesson.examples.map(e=>`
+                  <div class="ex-card">
+                    <div class="ex-lbl">Problem</div>
+                    <div class="ex-q">${e.q}</div>
+                    <div class="ex-a">✓ ${e.a}</div>
+                    <div class="ex-detail">${e.detail}</div>
+                  </div>`).join('')}
+              </div>
+              <div class="lesson-nav">
+                <button class="btn-ln outline" onclick="goTo('topics')">← Back to Topics</button>
+                <button class="btn-ln solid" onclick="startQuiz()">Take Quiz →</button>
+              </div>
+            </div>
+          </div>
+          <!-- Quiz Section -->
+          <div id="quizSection"></div>
+        </div>
+        <!-- Emotion Panel -->
+        <div class="emo-panel">
+          <div class="webcam-card">
+            <div class="wc-hd">
+              <h4>📷 Emotion Monitor</h4>
+              <div class="live-txt"><div class="live-dot"></div>LIVE</div>
+            </div>
+            <div class="wc-body">
+              <div class="face-view">
+                <video id="videoEl" autoplay muted playsinline></video>
+                <div id="facePH" class="face-placeholder" style="display:flex;flex-direction:column;align-items:center">
+                  <div id="eEmoji" class="face-emoji-big">😊</div>
+                  <div class="face-status">FACE DETECTED</div>
+                </div>
+                <div class="face-overlay">
+                  <div class="face-box-detect"></div>
+                  <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,.5);color:#06D6A0;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px">CNN MODEL</div>
+                  <div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.5);color:#EC4899;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px" id="confLabel">94%</div>
+                </div>
+              </div>
+              <button id="camBtn" class="cam-toggle" onclick="toggleWebcam()">📷 Enable Camera</button>
+              <div class="emo-current">
+                <div class="emo-current-lbl">Current Emotion</div>
+                <div class="emo-badge">
+                  <div class="emo-dot" id="eDot" style="background:#10B981"></div>
+                  <div class="emo-name" id="eLabel" style="color:#10B981">Focused</div>
+                </div>
+                <div class="emo-bars" id="eBars">${renderEmoBars()}</div>
+              </div>
+            </div>
+          </div>
+          <div class="adapt-engine">
+            <div class="adapt-hd">🤖 AI Adaptive Actions</div>
+            <div id="adaptActions">${renderAdaptActions()}</div>
+          </div>
+          <!-- Session Stats -->
+          <div class="card" style="padding:16px">
+            <div style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Session Stats</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+              <div style="background:#F9FAFB;border-radius:10px;padding:10px;text-align:center">
+                <div style="font-size:18px;font-weight:800" id="sessTime">0:00</div>
+                <div style="color:var(--text-muted)">Duration</div>
+              </div>
+              <div style="background:#F9FAFB;border-radius:10px;padding:10px;text-align:center">
+                <div style="font-size:18px;font-weight:800" id="eCount">0</div>
+                <div style="color:var(--text-muted)">Adaptations</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`);
+
+  // Session timer
+  let secs=0;
+  const timer = setInterval(()=>{
+    if(!S.sessionActive){ clearInterval(timer); return; }
+    secs++;
+    const el=document.getElementById('sessTime');
+    if(el) el.textContent=`${Math.floor(secs/60)}:${fmt(secs%60)}`;
+    const ec=document.getElementById('eCount');
+    if(ec) ec.textContent=S.sessionEmotions.filter(e=>e!=='focused').length;
+    // Flicker confidence
+    const cl=document.getElementById('confLabel');
+    if(cl) cl.textContent=Math.round(88+Math.random()*10)+'%';
+  },1000);
+
+  refreshLessonAdaptation();
+}
+
+function startQuiz(){
+  const lesson = getCurrentLesson();
+  if(!lesson){ return; }
+  S.quizState = {
+    questions: shuffle([...lesson.quiz]).slice(0,10),
+    idx:0, answers:[], score:0, active:true
+  };
+  renderQuizQuestion();
+  document.getElementById('quizSection')?.scrollIntoView({behavior:'smooth'});
+}
+
+function renderQuizQuestion(){
+  const qs = S.quizState;
+  const q = qs.questions[qs.idx];
+  if(!q) return;
+  const pct = Math.round((qs.idx/qs.questions.length)*100);
+  const qs_el = document.getElementById('quizSection');
+  if(!qs_el) return;
+  qs_el.innerHTML=`
+    <div class="quiz-wrap">
+      <div class="quiz-hd">
+        <h3>✏️ Knowledge Check — ${getCurrentLesson().title}</h3>
+        <p>Question ${qs.idx+1} of ${qs.questions.length}</p>
+      </div>
+      <div class="quiz-bd">
+        <div class="q-progress">
+          <div class="q-num">Q${qs.idx+1}/${qs.questions.length}</div>
+          <div class="q-track"><div class="q-track-fill" style="width:${pct}%"></div></div>
+          <div class="q-score-badge">Score: ${qs.score}/${qs.idx}</div>
+        </div>
+        <div class="q-text">${q.q}</div>
+        <div class="q-opts">
+          ${q.opts.map((opt,i)=>`
+            <button class="q-opt" id="qo${i}" onclick="answerQ(${i})">
+              <span style="font-weight:800;color:var(--text-muted);margin-right:8px">${String.fromCharCode(65+i)}.</span>${opt}
+            </button>`).join('')}
+        </div>
+        <div class="q-explain" id="qExplain">${q.explain}</div>
+        <div class="q-actions" id="qActions">
+          <button class="btn-quiz skip" onclick="skipQ()">Skip →</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function answerQ(idx){
+  const qs = S.quizState;
+  const q = qs.questions[qs.idx];
+  if(!q) return;
+  qs.answers.push({q:qs.idx, chosen:idx, correct:q.correct});
+  const correct = idx===q.correct;
+  if(correct) qs.score++;
+  // Style options
+  for(let i=0;i<q.opts.length;i++){
+    const btn=document.getElementById('qo'+i);
+    if(!btn) continue;
+    btn.disabled=true;
+    if(i===q.correct) btn.classList.add('correct');
+    else if(i===idx && !correct) btn.classList.add('wrong');
+  }
+  const exp=document.getElementById('qExplain');
+  if(exp) exp.classList.add('show');
+  const acts=document.getElementById('qActions');
+  if(acts) acts.innerHTML=`<button class="btn-quiz next" onclick="nextQ()">${qs.idx<qs.questions.length-1?'Next Question →':'Finish Quiz 🏁'}</button>`;
+  if(!correct) notify('Not quite — check the explanation below!','warning');
+  else notify('Correct! Well done! ✓','success');
+}
+
+function skipQ(){
+  S.quizState.answers.push({q:S.quizState.idx, chosen:-1, correct:S.quizState.questions[S.quizState.idx].correct});
+  nextQ();
+}
+
+function nextQ(){
+  const qs = S.quizState;
+  if(qs.idx >= qs.questions.length-1){
+    finishQuiz(); return;
+  }
+  qs.idx++;
+  renderQuizQuestion();
+}
+
+function finishQuiz(){
+  const qs = S.quizState;
+  const pct = Math.round((qs.score/qs.questions.length)*100);
+  qs.active=false;
+  // Save result
+  const rid='qr_'+Date.now();
+  const subj = SUBJECTS.find(s=>s.topics.some(t=>t.id===S.topic));
+  DB.set('qresult',rid,{id:rid,userId:S.currentUser.id,subject:subj?.id||'math',topic:S.topic,score:qs.score,total:qs.questions.length,pct,date:new Date().toISOString().slice(0,10),emotions:[...S.sessionEmotions].slice(-4)});
+  // Update progress
+  const p = getProgress(S.currentUser.id);
+  p.quizzesDone = (p.quizzesDone||0)+1;
+  p.avgScore = Math.round(((p.avgScore||0)*(p.quizzesDone-1)+pct)/p.quizzesDone);
+  if(pct>=90 && !p.badges.includes('quiz_master')) p.badges.push('quiz_master');
+  DB.set('progress',S.currentUser.id,p);
+  // Show modal
+  const stars = pct>=90?'⭐⭐⭐⭐⭐':pct>=75?'⭐⭐⭐⭐':pct>=60?'⭐⭐⭐':'⭐⭐';
+  const msg = pct>=90?'Outstanding! You\'re a star learner! 🌟':pct>=75?'Great work! Keep up the momentum!':pct>=60?'Good effort! Review and try again!':'Keep studying — you\'ve got this! 💪';
+  document.getElementById('modalEmoji').textContent = pct>=90?'🏆':pct>=75?'🎉':pct>=60?'😊':'📚';
+  document.getElementById('modalScore').textContent = `${qs.score}/${qs.questions.length}`;
+  document.getElementById('modalPct').textContent = `${pct}%`;
+  document.getElementById('modalStars').textContent = stars;
+  document.getElementById('modalMsg').textContent = msg;
+  document.getElementById('scoreModal').style.display='flex';
+}
+
+function endSession(){
+  closeModal('confirmModal');
+  stopEmotionSim();
+  S.sessionActive=false;
+  // Save session
+  const p = getProgress(S.currentUser.id);
+  p.sessions = (p.sessions||0)+1;
+  p.totalMinutes = (p.totalMinutes||0)+Math.round(S.sessionEmotions.length*4.5/60);
+  p.emotionLog = [...(p.emotionLog||[]), ...S.sessionEmotions].slice(-20);
+  if((p.sessions||0)===1 && !p.badges.includes('first_session')) p.badges.push('first_session');
+  DB.set('progress',S.currentUser.id,p);
+  notify('Session saved! Great learning today! 🎉','success');
+  goTo('dashboard');
+}
+
+// =====================================================
+// STUDENT PROGRESS
+// =====================================================
+function pgStudentProgress(){
+  const p = getProgress(S.currentUser.id);
+  const results = DB.all('qresult').filter(q=>q.userId===S.currentUser.id);
+  const emoCount = {};
+  Object.keys(EMOTIONS).forEach(k=>emoCount[k]=0);
+  (p.emotionLog||[]).forEach(e=>{ if(emoCount[e]!==undefined) emoCount[e]++; });
+  const total = Math.max(1, Object.values(emoCount).reduce((a,b)=>a+b,0));
+
+  setMain(`
+    <div class="pg-header"><h1>My Progress 📈</h1><p>Track your learning journey</p></div>
+    <div class="pg-body">
+      <div class="stats-grid">
+        <div class="stat-card sc-purple"><div class="stat-val">${Math.round((p.math+p.science+p.english)/3)}%</div><div class="stat-lbl">Overall Progress</div></div>
+        <div class="stat-card sc-green"><div class="stat-val">${p.avgScore||0}%</div><div class="stat-lbl">Avg Quiz Score</div></div>
+        <div class="stat-card sc-amber"><div class="stat-val">${Math.round((p.totalMinutes||0)/60*10)/10}h</div><div class="stat-lbl">Total Study Time</div></div>
+        <div class="stat-card sc-pink"><div class="stat-val">${p.quizzesDone||0}</div><div class="stat-lbl">Quizzes Done</div></div>
+      </div>
+      <div class="section-ttl">Subject Progress</div>
+      <div class="prog-list">
+        ${SUBJECTS.map(s=>{
+          const key=s.id.slice(0,3);
+          const pct=p[key]||0;
+          return `<div class="prog-item">
+            <div class="prog-ico">${s.icon}</div>
+            <div class="prog-info">
+              <div class="prog-name">${s.name}</div>
+              <div class="prog-sub">${s.topics.filter(t=>t.status==='done').length}/${s.topics.length} topics complete</div>
+              <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:${pct}%;background:${s.color}"></div></div>
+            </div>
+            <div class="prog-pct-big" style="color:${s.color}">${pct}%</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="analytics-grid" style="margin-top:24px">
+        <div class="analytics-card">
+          <h3>Emotion Pattern (all sessions)</h3>
+          <div class="emo-breakdown">
+            ${Object.entries(EMOTIONS).map(([k,v])=>{
+              const pct2=Math.round((emoCount[k]/total)*100);
+              return `<div class="eb-row">
+                <div class="eb-lbl">${v.emoji} ${v.label}</div>
+                <div class="eb-track"><div class="eb-fill" style="width:${pct2}%;background:${v.color}"></div></div>
+                <div class="eb-pct">${pct2}%</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+        <div class="analytics-card">
+          <h3>Recent Quiz Results</h3>
+          ${results.length===0 ? '<div class="empty-state" style="padding:20px"><div class="es-icon">✏️</div><p>No quizzes yet — take one!</p></div>' :
+          `<table class="data-table">
+            <thead><tr><th>Topic</th><th>Score</th><th>Date</th></tr></thead>
+            <tbody>${results.slice(-5).reverse().map(r=>`
+              <tr>
+                <td>${r.topic}</td>
+                <td><span style="font-weight:800;color:${r.pct>=75?'#10B981':'#F59E0B'}">${r.score}/${r.total} (${r.pct}%)</span></td>
+                <td style="color:var(--text-muted)">${r.date}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`}
+        </div>
+      </div>
+    </div>`);
+}
+
+// =====================================================
+// QUICK QUIZ
+// =====================================================
+function pgQuickQuiz(){
+  setMain(`
+    <div class="pg-header"><h1>Quick Quiz ✏️</h1><p>Test your knowledge without a full session</p></div>
+    <div class="pg-body" style="max-width:680px">
+      <div class="section-ttl">Choose a Topic</div>
+      <div class="topic-list">
+        ${[['algebra','Introduction to Algebra','math'],['forces','Forces & Motion','science'],['grammar','Parts of Speech','english']].map(([id,name,sub])=>`
+          <div class="topic-row" onclick="S.topic='${id}';startStandaloneQuiz()">
+            <div class="t-icon">${SUBJECTS.find(s=>s.id===sub)?.icon||'📚'}</div>
+            <div class="t-name">${name}</div>
+            <div class="t-badge b-new" style="background:var(--primary-light);color:var(--primary)">Start Quiz →</div>
+          </div>`).join('')}
+      </div>
+    </div>`);
+}
+
+function startStandaloneQuiz(){
+  const lesson = getCurrentLesson();
+  if(!lesson) return;
+  S.sessionEmotions=[];
+  S.quizState={questions:shuffle([...lesson.quiz]).slice(0,10),idx:0,answers:[],score:0,active:true};
+  setMain(`
+    <div class="pg-header"><h1>${lesson.title} — Quiz</h1><p>Answer all questions to see your score</p></div>
+    <div class="pg-body" style="max-width:680px">
+      <div id="quizSection"></div>
+    </div>`);
+  renderQuizQuestion();
+}
+
+// =====================================================
+// BADGES
+// =====================================================
+function pgBadges(){
+  const p = getProgress(S.currentUser.id);
+  setMain(`
+    <div class="pg-header"><h1>My Badges 🏆</h1><p>Achievements earned through learning</p></div>
+    <div class="pg-body">
+      <div class="badge-grid">
+        ${BADGES.map(b=>`
+          <div class="badge-card${p.badges?.includes(b.id)?'':' locked'}">
+            <div class="badge-icon">${b.icon}</div>
+            <div class="badge-name">${b.name}</div>
+            <div class="badge-desc">${b.desc}</div>
+            ${p.badges?.includes(b.id)?'<div style="color:#10B981;font-size:11px;font-weight:700;margin-top:6px">✓ Earned</div>':'<div style="color:var(--text-muted);font-size:11px;margin-top:6px">🔒 Locked</div>'}
+          </div>`).join('')}
+      </div>
+    </div>`);
+}
+
+// =====================================================
+// PROFILE
+// =====================================================
+function pgProfile(){
+  const u = S.currentUser;
+  setMain(`
+    <div class="pg-header"><h1>Profile ⚙️</h1><p>Manage your account settings</p></div>
+    <div class="pg-body">
+      <div class="profile-card">
+        <div class="profile-row">
+          <div class="profile-av" style="background:${u.color||'#6C63FF'}">${u.avatar||u.name[0]}</div>
+          <div class="profile-info">
+            <h2>${u.name}</h2>
+            <p>${u.role.charAt(0).toUpperCase()+u.role.slice(1)} · Username: ${u.username}</p>
+          </div>
+        </div>
+        <div class="profile-form" id="profileForm">
+          <div class="pf-group"><label>Full Name</label><input id="pf-name" value="${u.name}"></div>
+          <div class="pf-group"><label>Username</label><input id="pf-user" value="${u.username}"></div>
+          ${u.grade?`<div class="pf-group"><label>Grade</label><select id="pf-grade"><option${u.grade==='6'?' selected':''}>6</option><option${u.grade==='7'?' selected':''}>7</option></select></div>`:''}
+          ${u.subject?`<div class="pf-group"><label>Subject</label><input id="pf-subj" value="${u.subject||''}"></div>`:''}
+          <div class="pf-group"><label>New Password (optional)</label><input id="pf-pass" type="password" placeholder="Leave blank to keep current"></div>
+        </div>
+        <button class="btn-save" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>`);
+}
+
+function saveProfile(){
+  const u = S.currentUser;
+  const name = document.getElementById('pf-name')?.value;
+  const pass = document.getElementById('pf-pass')?.value;
+  if(name) u.name = name;
+  if(pass) u.password = pass;
+  DB.set('user',u.id,u);
+  S.currentUser = u;
+  document.getElementById('sbName').textContent = u.name;
+  document.getElementById('sbAvatar').textContent = u.name[0];
+  notify('Profile saved successfully!','success');
+}
+
+// =====================================================
+// ===== TEACHER PAGES =====
+// =====================================================
+function pgTeacherDash(){
+  const confused = STUDENTS_DEMO.filter(s=>s.emotion==='confused'||s.emotion==='frustrated').length;
+  setMain(`
+    <div class="pg-header"><h1>Teacher Dashboard 📚</h1><p>Real-time class monitoring</p></div>
+    <div class="pg-body">
+      <div class="stats-grid">
+        <div class="stat-card sc-purple"><div class="stat-val">${STUDENTS_DEMO.length}</div><div class="stat-lbl">Total Students</div></div>
+        <div class="stat-card sc-green"><div class="stat-val">${Math.round(STUDENTS_DEMO.reduce((a,s)=>a+s.score,0)/STUDENTS_DEMO.length)}%</div><div class="stat-lbl">Class Avg Score</div></div>
+        <div class="stat-card sc-red"><div class="stat-val">${confused}</div><div class="stat-lbl">Need Attention</div><div class="stat-trend trend-dn">Confused / Frustrated</div></div>
+        <div class="stat-card sc-amber"><div class="stat-val">${STUDENTS_DEMO.reduce((a,s)=>a+s.sessions,0)}</div><div class="stat-lbl">Total Sessions</div></div>
+      </div>
+      <div class="section-ttl">Live Student Monitor</div>
+      <div class="card">
+        <div class="card-bd" style="padding:16px">
+          <div class="stud-list">
+            ${STUDENTS_DEMO.map(s=>`
+              <div class="stud-row" onclick="alert('Detailed view for ${s.name} — real-time data available in full deployment.')">
+                <div class="sa" style="background:${s.color}">${s.name[0]}</div>
+                <div class="sn">${s.name}</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-right:8px">Grade ${s.grade}</div>
+                <div style="font-size:12px;font-weight:700;margin-right:12px">${s.score}%</div>
+                <div class="ss e-${s.emotion}">${EMOTIONS[s.emotion].emoji} ${EMOTIONS[s.emotion].label}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="analytics-grid" style="margin-top:20px">
+        <div class="analytics-card">
+          <h3>Class Emotion Distribution</h3>
+          <div class="emo-breakdown">
+            ${[['focused',40,'#10B981'],['happy',20,'#EC4899'],['confused',20,'#F59E0B'],['bored',12,'#6B7280'],['frustrated',8,'#EF4444']].map(([n,p,c])=>`
+              <div class="eb-row">
+                <div class="eb-lbl">${EMOTIONS[n].emoji} ${EMOTIONS[n].label}</div>
+                <div class="eb-track"><div class="eb-fill" style="width:${p}%;background:${c}"></div></div>
+                <div class="eb-pct">${p}%</div>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="analytics-card">
+          <h3>Weekly Activity (sessions)</h3>
+          <div class="bar-chart">
+            ${[['M',7],['T',9],['W',6],['T',11],['F',8],['S',4],['S',2]].map(([d,v])=>`
+              <div class="bc-col">
+                <div class="bc-bar" style="height:${v/11*100}%;background:linear-gradient(180deg,#6C63FF,#EC4899)"></div>
+                <div class="bc-lbl">${d}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`);
+}
+
+function pgStudents(){
+  setMain(`
+    <div class="pg-header"><h1>My Students 👥</h1><p>Detailed student performance overview</p></div>
+    <div class="pg-body">
+      <div class="subj-grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">
+        ${STUDENTS_DEMO.map(s=>{
+          const p=getProgress(s.id);
+          return `<div class="subj-card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+              <div class="sb-avatar" style="background:${s.color};width:44px;height:44px;font-size:16px">${s.name[0]}</div>
+              <div><div style="font-size:15px;font-weight:800">${s.name}</div><div style="font-size:12px;color:var(--text-muted)">Grade ${s.grade}</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;text-align:center">
+              <div style="background:#F9FAFB;border-radius:10px;padding:9px"><div style="font-size:17px;font-weight:800">${s.score}%</div><div style="font-size:10px;color:var(--text-muted)">Avg Score</div></div>
+              <div style="background:#F9FAFB;border-radius:10px;padding:9px"><div style="font-size:17px;font-weight:800">${s.sessions}</div><div style="font-size:10px;color:var(--text-muted)">Sessions</div></div>
+              <div style="background:#F9FAFB;border-radius:10px;padding:9px"><div style="font-size:17px;font-weight:800">${s.time}</div><div style="font-size:10px;color:var(--text-muted)">Time</div></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;color:var(--text-muted)">Current emotion:</span>
+              <span class="ss e-${s.emotion}">${EMOTIONS[s.emotion].emoji} ${EMOTIONS[s.emotion].label}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`);
+}
+
+function pgAnalytics(){
+  setMain(`
+    <div class="pg-header"><h1>Analytics 📊</h1><p>Deep insights into class performance and engagement</p></div>
+    <div class="pg-body">
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <h3>Subject Engagement Rate</h3>
+          <div class="emo-breakdown">
+            ${[['Mathematics',75,'#6C63FF'],['Science',58,'#10B981'],['English',67,'#F59E0B']].map(([n,p,c])=>`
+              <div class="eb-row">
+                <div class="eb-lbl" style="width:100px">${n}</div>
+                <div class="eb-track"><div class="eb-fill" style="width:${p}%;background:${c}"></div></div>
+                <div class="eb-pct">${p}%</div>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="analytics-card">
+          <h3>AI Adaptation Trigger Count</h3>
+          <div class="bar-chart" style="height:100px">
+            ${[['Confused',18,'#F59E0B'],['Bored',12,'#6B7280'],['Frustrated',9,'#EF4444'],['Happy',24,'#EC4899']].map(([l,v,c])=>`
+              <div class="bc-col">
+                <div class="bc-bar" style="height:${v/24*100}%;background:${c}"></div>
+                <div class="bc-lbl" style="font-size:8px">${l}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>AI Recommendations for Teacher</h3></div>
+        <div class="card-bd">
+          <div class="insight-list">
+            <div class="insight-it"><div class="insight-dot" style="background:#EF4444"></div><div class="insight-txt"><strong>Raj Kumar</strong> shows frequent boredom in English — consider assigning advanced reading challenges or vocabulary games</div></div>
+            <div class="insight-it"><div class="insight-dot" style="background:#F59E0B"></div><div class="insight-txt"><strong>Priya Sharma</strong> gets confused repeatedly during Forces & Motion — a visual demonstration or hands-on experiment may help</div></div>
+            <div class="insight-it"><div class="insight-dot" style="background:#10B981"></div><div class="insight-txt"><strong>Alex Johnson</strong> is consistently focused and performing above average — ideal candidate for peer mentoring</div></div>
+            <div class="insight-it"><div class="insight-dot" style="background:#6B7280"></div><div class="insight-txt">Average class focus duration is <strong>14 minutes</strong> before first distraction — consider breaking lessons into 12-minute chunks</div></div>
+          </div>
+        </div>
+      </div>
+    </div>`);
+}
+
+function pgTeacherReports(){
+  setMain(`
+    <div class="pg-header"><h1>Reports 📋</h1><p>Downloadable performance reports</p></div>
+    <div class="pg-body">
+      <div class="card">
+        <div class="card-hd"><h3>All Student Performance</h3></div>
+        <div class="card-bd" style="padding:0">
+          <table class="data-table">
+            <thead><tr><th>Student</th><th>Grade</th><th>Math</th><th>Science</th><th>English</th><th>Avg Score</th><th>Sessions</th><th>Status</th></tr></thead>
+            <tbody>
+              ${STUDENTS_DEMO.map(s=>{
+                const p=getProgress(s.id);
+                return `<tr>
+                  <td><div style="display:flex;align-items:center;gap:8px"><div class="sa" style="background:${s.color};width:26px;height:26px;font-size:11px">${s.name[0]}</div>${s.name}</div></td>
+                  <td>${s.grade}</td>
+                  <td style="color:#6C63FF;font-weight:700">${p.math||0}%</td>
+                  <td style="color:#10B981;font-weight:700">${p.science||0}%</td>
+                  <td style="color:#F59E0B;font-weight:700">${p.english||0}%</td>
+                  <td style="font-weight:800">${s.score}%</td>
+                  <td>${s.sessions}</td>
+                  <td><span class="ss e-${s.emotion}">${EMOTIONS[s.emotion].emoji} ${EMOTIONS[s.emotion].label}</span></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`);
+}
+
+// =====================================================
+// ===== PARENT PAGES =====
+// =====================================================
+function pgParentDash(){
+  const childId = S.currentUser.childId;
+  const child = DB.get('user',childId)||STUDENTS_DEMO[0];
+  const p = getProgress(childId);
+  setMain(`
+    <div class="pg-header"><h1>Parent Dashboard 👨‍👩‍👧</h1><p>${child.name}'s learning overview</p></div>
+    <div class="pg-body">
+      <div class="child-overview">
+        <div class="child-hdr">
+          <div class="child-av">${child.avatar||child.name[0]}</div>
+          <div>
+            <div class="child-name">${child.name}</div>
+            <div class="child-grade">Grade ${child.grade||7} · Age ${child.age||12}</div>
+          </div>
+          <div style="margin-left:auto"><span class="e-focused" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700">Active Learner 🌟</span></div>
+        </div>
+        <div class="child-stats-row">
+          <div class="cs"><div class="cs-val">${p.avgScore||0}%</div><div class="cs-lbl">Avg Score</div></div>
+          <div class="cs"><div class="cs-val">${p.sessions||0}</div><div class="cs-lbl">Sessions</div></div>
+          <div class="cs"><div class="cs-val">${Math.round((p.totalMinutes||0)/60*10)/10}h</div><div class="cs-lbl">This Week</div></div>
+        </div>
+        <div style="margin-top:16px;font-size:12px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Recent Emotion Journey</div>
+        <div class="emo-pills">
+          ${(p.emotionLog||['focused','happy','confused','focused']).slice(-8).map(e=>`
+            <div class="emo-pill" style="background:${EMOTIONS[e].color}20;color:${EMOTIONS[e].color}">${EMOTIONS[e].emoji} ${EMOTIONS[e].label}</div>`).join('')}
+        </div>
+      </div>
+      <div class="section-ttl">Subject Progress</div>
+      <div class="prog-list">
+        ${SUBJECTS.map(s=>{
+          const key=s.id.slice(0,3);
+          const pct=p[key]||0;
+          return `<div class="prog-item">
+            <div class="prog-ico">${s.icon}</div>
+            <div class="prog-info">
+              <div class="prog-name">${s.name}</div>
+              <div class="prog-sub">${s.topics.filter(t=>t.status==='done').length} topics mastered</div>
+              <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:${pct}%;background:${s.color}"></div></div>
+            </div>
+            <div class="prog-pct-big" style="color:${s.color}">${pct}%</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`);
+}
+
+function pgParentProgress(){
+  const childId = S.currentUser.childId;
+  const p = getProgress(childId);
+  const results = DB.all('qresult').filter(q=>q.userId===childId);
+  setMain(`
+    <div class="pg-header"><h1>Progress Report 📈</h1><p>Detailed learning analytics</p></div>
+    <div class="pg-body">
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <h3>Quiz Score Trend</h3>
+          <div class="emo-breakdown">
+            ${[['Week 1',72],['Week 2',78],['Week 3',81],['Week 4',p.avgScore||85]].map(([w,sc])=>`
+              <div class="eb-row">
+                <div class="eb-lbl" style="width:60px">${w}</div>
+                <div class="eb-track"><div class="eb-fill" style="width:${sc}%;background:linear-gradient(90deg,#6C63FF,#EC4899)"></div></div>
+                <div class="eb-pct">${sc}%</div>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="analytics-card">
+          <h3>Study Time by Subject (hours)</h3>
+          <div class="bar-chart" style="height:100px">
+            ${[['Math',2.5,'#6C63FF'],['Science',1.8,'#10B981'],['English',2.1,'#F59E0B']].map(([l,v,c])=>`
+              <div class="bc-col">
+                <div class="bc-bar" style="height:${v/2.5*100}%;background:${c}"></div>
+                <div class="bc-lbl">${l}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>All Quiz Results</h3></div>
+        <div class="card-bd" style="padding:0">
+          ${results.length===0 ? '<div class="empty-state" style="padding:20px"><div class="es-icon">✏️</div><p>No quiz results yet.</p></div>' :
+          `<table class="data-table">
+            <thead><tr><th>Topic</th><th>Score</th><th>%</th><th>Date</th></tr></thead>
+            <tbody>${results.reverse().map(r=>`
+              <tr>
+                <td>${r.topic}</td>
+                <td>${r.score}/${r.total}</td>
+                <td><span style="font-weight:800;color:${r.pct>=75?'#10B981':'#F59E0B'}">${r.pct}%</span></td>
+                <td style="color:var(--text-muted)">${r.date}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`}
+        </div>
+      </div>
+    </div>`);
+}
+
+function pgEmotionInsights(){
+  const childId = S.currentUser.childId;
+  const p = getProgress(childId);
+  const emoCount={};
+  Object.keys(EMOTIONS).forEach(k=>emoCount[k]=0);
+  (p.emotionLog||[]).forEach(e=>{if(emoCount[e]!==undefined)emoCount[e]++;});
+  const total=Math.max(1,Object.values(emoCount).reduce((a,b)=>a+b,0));
+  setMain(`
+    <div class="pg-header"><h1>Emotion Insights 💭</h1><p>Understanding your child's learning emotions</p></div>
+    <div class="pg-body">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:22px">
+        ${Object.entries(EMOTIONS).map(([k,v])=>{
+          const pct=Math.round((emoCount[k]/total)*100);
+          return `<div class="card" style="padding:18px;text-align:center">
+            <div style="font-size:30px;margin-bottom:8px">${v.emoji}</div>
+            <div style="font-size:13px;font-weight:800;color:${v.color}">${v.label}</div>
+            <div style="font-size:22px;font-weight:800;margin-top:7px">${pct}%</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>What the AI does for each emotion</h3></div>
+        <div class="card-bd">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            ${Object.entries(EMOTIONS).map(([k,v])=>`
+              <div style="background:#F9FAFB;border-radius:14px;padding:14px">
+                <div style="font-size:13px;font-weight:800;color:${v.color};margin-bottom:8px">${v.emoji} When ${v.label}</div>
+                ${EMOTION_ACTIONS[k].map(a=>`<div style="font-size:12px;color:var(--text);display:flex;gap:6px;margin-bottom:4px"><span style="color:${v.color}">•</span>${a}</div>`).join('')}
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`);
+}
+
+function pgParentReport(){
+  const childId = S.currentUser.childId;
+  const child = DB.get('user',childId)||{name:'Alex',grade:'7'};
+  const p = getProgress(childId);
+  setMain(`
+    <div class="pg-header"><h1>Full Report 📋</h1><p>Comprehensive learning report for ${child.name}</p></div>
+    <div class="pg-body">
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-hd"><h3>AI-Generated Learning Insights</h3></div>
+        <div class="card-bd">
+          <div class="insight-list">
+            <div class="insight-it"><div class="insight-dot" style="background:#10B981"></div><div class="insight-txt">${child.name} spends approximately <strong>65% of study time in a focused state</strong> — excellent for Grade ${child.grade||7}</div></div>
+            <div class="insight-it"><div class="insight-dot" style="background:#F59E0B"></div><div class="insight-txt">Shows confusion most frequently during <strong>Algebra</strong> — the AI automatically simplifies content and provides extra examples when confusion is detected</div></div>
+            <div class="insight-it"><div class="insight-dot" style="background:#6B7280"></div><div class="insight-txt">Occasional boredom in <strong>English Grammar</strong> — the system automatically introduces interactive quizzes to re-engage</div></div>
+            <div class="insight-it"><div class="insight-dot" style="background:#EC4899"></div><div class="insight-txt">Quiz scores have <strong>improved consistently over 4 weeks</strong> — the adaptive system is working well</div></div>
+            <div class="insight-it"><div class="insight-dot" style="background:#6C63FF"></div><div class="insight-txt">Recommended focus area: <strong>Geometry</strong> and <strong>Reading Comprehension</strong> — both not yet started</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>Suggestions for Parents</h3></div>
+        <div class="card-bd">
+          <div class="insight-list">
+            <div class="insight-it"><div class="insight-dot" style="background:#6C63FF"></div><div class="insight-txt">Encourage 30-minute daily study sessions — consistency matters more than length</div></div>
+            <div class="insight-it"><div class="insight-dot" style="background:#10B981"></div><div class="insight-txt">Celebrate quiz achievements — ${child.name} responds positively to recognition</div></div>
+            <div class="insight-it"><div class="insight-dot" style="background:#F59E0B"></div><div class="insight-txt">For algebra homework help, encourage ${child.name} to use the simpler explanation mode in the app</div></div>
+          </div>
+        </div>
+      </div>
+    </div>`);
+}
+
+function pgNotFound(){
+  setMain(`<div class="pg-body"><div class="empty-state"><div class="es-icon">🔍</div><h3>Page not found</h3><p>This page hasn't been built yet.</p></div></div>`);
+}
+
+// =====================================================
+// INIT
+// =====================================================
+selectRole('student');
+</script>
+</body>
+</html>
